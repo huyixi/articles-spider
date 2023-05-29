@@ -13,16 +13,21 @@ first_href=$(echo "$hrefs" | head -n 1)
 echo "第一个获取到的 href 是：$first_href"
 
 # 提示是否添加前缀
-echo "是否要添加前缀？ (输入 Y 或 N) "
-read PREFIX_CHOICE
+echo "是否要添加前缀？ (若要添加请直接输入前缀，若输入为空，则视为不添加) "
+read PREFIX
 
-# 根据用户的选择，可能会添加前缀
-if [[ "$PREFIX_CHOICE" == "Y" || "$PREFIX_CHOICE" == "y" ]]
-then
-    echo "请输入前缀: "
-    read PREFIX
-    hrefs=$(echo "$hrefs" | sed "s@^@${PREFIX}@")
-fi
+# 如果用户没有输入任何内容，则将前缀设置为空
+PREFIX=${PREFIX:-''}
 
-# 输出结果
-echo "$hrefs"
+hrefs=$(echo "$hrefs" | while read -r line ; do
+    if echo "$line" | grep -q -e '^http://' -e '^https://'; then
+        # 如果已经包含 http:// 或 https://，则直接输出
+        echo "$line"
+    else
+        # 如果没有，则添加前缀
+        echo "${PREFIX}$line"
+    fi
+done)
+
+# 输出结果到一个新的文件，文件名为原文件名加上 "_links"
+echo "$hrefs" > "links_${FILE_NAME}"
